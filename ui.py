@@ -1,6 +1,6 @@
 import sys
 import pygame
-from game import place_mines, create_game, reveal, toggle_flag, ai_make_move
+from game import place_mines, create_game, reveal, toggle_flag, ai_make_move, mines_from_density
 import mineSelector
 import mainMenu
 import themeSelector
@@ -43,9 +43,14 @@ def load_icon(path, size):
         surf.fill((255, 0, 0))
         return surf
 
-def new_game(x=None, y=None):
-    board = place_mines(NUM_MINES, GRID_SIZE, GRID_SIZE,x,y)
-    return create_game(board)
+def new_game(state, x=None, y=None):
+    num_mines = state.get("mine_count", mines_from_density(state["density"], GRID_SIZE))
+    board = place_mines(num_mines, GRID_SIZE, GRID_SIZE,x,y)
+    game_state = create_game(board)
+    game_state["density"] = state["density"] 
+    game_state["mine_count"] = num_mines
+    return game_state
+
 def draw_menu(surface, state, flag_icon, ai_turn_timer=0, ai_turn_delay=2000):
     pygame.draw.rect(surface, GREY, (0, 0, WINDOW_WIDTH, MENU_HEIGHT))
     font = pygame.font.Font(None, 28)
@@ -126,7 +131,14 @@ def main():
     pygame.display.set_caption("Minesweeper")
     clock = pygame.time.Clock()
 
-    state = new_game() # dummy state before the first square is clicked
+    # dummy state with default settings 
+    state = {
+        "density": "medium",
+        "theme": "Themes/OG",
+        "GameState": "Menu"
+    }
+
+    state = new_game(state) # dummy state before the first square is clicked
     state["first_click"] = True
     show_tut = True
     
@@ -165,7 +177,7 @@ def main():
                     running = False
                 elif event.type == pygame.KEYDOWN and event.key == pygame.K_r:
                     prev_theme = state["theme"]
-                    state = new_game()
+                    state = new_game(state)
                     state["GameState"] = "Play"
                     state["theme"] = prev_theme
                     state["first_click"] = True
@@ -173,7 +185,7 @@ def main():
                     ai_turn_timer = 0  # Reset AI timer
                 elif event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
                     prev_theme = state["theme"]
-                    state = new_game()
+                    state = new_game(state)
                     state["theme"] = prev_theme
                     state["first_click"] = True
                     show_tut = True
@@ -189,7 +201,7 @@ def main():
                             if state["first_click"]:
                                 prev_GameState = state["GameState"]
                                 prev_theme = state["theme"]
-                                state = new_game(x=row, y=col)
+                                state = new_game(state, x=row, y=col)
                                 state["GameState"] = prev_GameState
                                 state["theme"] = prev_theme
                                 state["first_click"] = False

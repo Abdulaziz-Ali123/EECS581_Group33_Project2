@@ -63,6 +63,7 @@ def create_game(board: List[List[int]]) -> Dict[str, Any]:
         "theme": "Themes/OG/", # can be Themes/Drawn/, Themes/OG/, Themes/Dark/, Themes/Light/
         "ai_difficulty": "medium", # AI difficulty - change to "easy" or "hard" as needed
         "current_turn": "human", # human goes first, then alternates with AI
+        "density": "medium", # default mines density level
     }
 
 def neighbors(state, r, c):
@@ -323,3 +324,16 @@ def ai_hard_move(state) -> Tuple[bool, str]:
         state["current_turn"] = "human"
     
     return finished, f"AI (Hard) revealed safe cell ({r}, {c}): {message}"
+
+# Helper that returns number of mines for given density level
+def mines_from_density(density: str, grid_size: int) -> int:
+    total_cells = grid_size *  grid_size
+    if density == "easy":
+        return total_cells // 8 # 12.5% of the tiles for a 10*10 grid
+    elif density == "medium":
+        return total_cells // 6 # approximately 17% of the tiles for a 10*10 grid
+    elif density == "hard":
+        return total_cells // 4 # 25% of the tiles for a 10*10 grid
+    else:
+        return total_cells // 6 # default to medium
+        

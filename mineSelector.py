@@ -1,6 +1,9 @@
 
 import pygame
 import sys
+from game import mines_from_density
+from ui import GRID_SIZE
+
 '''
 Initilizes mine selector page screen size and button/text positioning
 '''
@@ -31,8 +34,11 @@ back_button = pygame.Rect(WIDTH//2 - 60, HEIGHT - 60, 120, 40)
 start_button = pygame.Rect(WIDTH//2 - 60, HEIGHT - 110, 120, 40)
 minus_button = pygame.Rect(WIDTH//2 - 70, HEIGHT//2 - 20, 40, 40)
 plus_button = pygame.Rect(WIDTH//2 + 30, HEIGHT//2 - 20, 40, 40)
+density_button = pygame.Rect(WIDTH//2 - 100, start_button.y - (40 + 10), 200, 40)
 
-def draw_menu(mine_count):
+
+
+def draw_menu(state, mine_count):
     '''
     Draws how the mine selector looks ie. the increase/decrease buttons and tracking mine count
     '''
@@ -61,6 +67,12 @@ def draw_menu(mine_count):
     plus_text = FONT.render("+", True, BLACK)
     screen.blit(plus_text, (plus_button.centerx - plus_text.get_width()//2, plus_button.centery - plus_text.get_height()//2))
 
+    # density button
+    pygame.draw.rect(screen, DARK_GRAY, density_button)
+    density_text = FONT.render(f"Density: {state['density'].title()}", True, WHITE)
+    screen.blit(density_text, (density_button.centerx - density_text.get_width()//2,
+                               density_button.centery - density_text.get_height()//2))
+
     # start button
     pygame.draw.rect(screen, DARK_GRAY, start_button)
     start_text = SMALL_FONT.render("Start Game", True, WHITE)
@@ -82,7 +94,7 @@ def run(mine_count, state):
     '''
     clock = pygame.time.Clock()
     while True:
-        draw_menu(mine_count)
+        draw_menu(state, mine_count)
         for event in pygame.event.get():
             # when button is clicked
             if event.type == pygame.QUIT:
@@ -101,6 +113,17 @@ def run(mine_count, state):
                 elif back_button.collidepoint(event.pos):
                     state["GameState"] = "Menu"
                     return state
+                elif density_button.collidepoint(event.pos):
+                    if state["density"] == "easy":
+                        state["density"] = "medium"
+                    elif state["density"] == "medium":
+                        state["density"] = "hard"
+                    else:
+                        state["density"] = "easy"
+
+                    # Auto-set mine count to match density preset
+                    state["mine_count"] = mines_from_density(state["density"], GRID_SIZE)
+
                 
 
         clock.tick(30)
